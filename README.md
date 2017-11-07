@@ -11,5 +11,6 @@ A figure folder for interesting plots
 A cache folder containing working .Rdata environements.
 A sandbox containing R script (or other) for preliminary data analysis
 A todo.md doc which acts as a todo list.
+A paper folder for interesting/relevant papers.
 
 Other folders and documents will be added in time.
