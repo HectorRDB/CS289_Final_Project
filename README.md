@@ -27,9 +27,5 @@ Your local repositories should also contain a data folder that will be ignored w
 
 ## Deliverables
 
-* The report describing our findings is available on Overleaf and may be _read
-  and edited_ [here](https://www.overleaf.com/9078081jsgsfmdtdhpx).
-* The poster detailing our work is available on Overleaf and may be _read and
-  edited_ [here](https://www.overleaf.com/9180562vbmfxhcwvsvk).
 * The proposal for our project is available on Overleaf and may be _read and
-  edited_ [here](https://www.overleaf.com/9100566jqrmmpyvywxx).
+  edited_ [here](https://www.overleaf.com/12068418cjvyqbvwyrpk#/45808516/).
