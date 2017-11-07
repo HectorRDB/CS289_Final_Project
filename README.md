@@ -14,3 +14,5 @@ The repository contains the following things:
 - A paper folder for interesting/relevant papers.
 
 Other folders and documents will be added in time.
+
+Your local repositories should also contain a data folder that will be ignored when pushing your commits.
