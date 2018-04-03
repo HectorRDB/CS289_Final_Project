@@ -2,7 +2,7 @@
 
 > These are materials for the final project for CS289
 
-_**Group members:**_ Maxwell Murphy, Yajing Li & Hector Roux de Bézieux
+_**Group members:**_ Daniel Amar, Ariane Lozac'hmeur, Hector Roux de Bézieux & Alexandre Vincent
 
 The data is too large to be stored on Github but it is available at https://drive.google.com/open?id=0BzdJ4so0WQKENHo2ZWxPeWYxdXM.
 
