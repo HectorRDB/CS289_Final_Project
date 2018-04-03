@@ -1,9 +1,6 @@
 # Stat245D Final Project
 
-> These are materials for the final project for Public Health C240D / Statistics
-> C245D: "Computational Statistics with Applications in Biology and Medicine II", as taught by Prof. [Sandrine
-> Dudoit](https://www.stat.berkeley.edu/~sandrine/), at UC Berkeley, in the
-> Fall 2017 semester.
+> These are materials for the final project for CS289
 
 _**Group members:**_ Maxwell Murphy, Yajing Li & Hector Roux de Bézieux
 
@@ -11,12 +8,11 @@ The data is too large to be stored on Github but it is available at https://driv
 
 The repository contains the following things:
 
-- An R/ folder for different scripts (such as loading and cleaning the data)
+- An Code/ folder for different scripts (such as loading and cleaning the data)
 - A figure folder for interesting plots
-- A cache folder containing working .Rdata environements.
+- A cache folder containing working environements.
 - A sandbox containing R script (or other) for preliminary data analysis
 - A todo.md doc which acts as a todo list.
-- A paper folder for interesting/relevant papers.
 
 Other folders and documents will be added in time.
 
@@ -28,4 +24,4 @@ Your local repositories should also contain a data folder that will be ignored w
 ## Deliverables
 
 * The proposal for our project is available on Overleaf and may be _read and
-  edited_ [here](https://www.overleaf.com/12068418cjvyqbvwyrpk#/45808516/).
+  edited_ [here](https://www.overleaf.com/14957190bbtqsmpgdttw).
