@@ -9,12 +9,16 @@ var = 2
 noise = 'gaussian'
 
 
-def get_function(degree=3):
-    coeff = np.random.uniform(-10, 10, size=degree)
+def get_function(d=3):
+    # Generates a function of degree d.
+
+    coeff = np.random.uniform(-10, 10, size=d)
     return lambda x: np.polyval(coeff, x), coeff
 
 
 def get_functions(n, d):
+    # Generates n functions of degree d with a least one positive value on [0,1]
+
     functions = []
     coefficients = pd.DataFrame()
     while len(functions) < n:
@@ -26,18 +30,29 @@ def get_functions(n, d):
 
 
 def get_times(n_times=500):
+    # Generates n_times timestamps between [0,1] to evaluate the function
+
     return np.sort(np.random.uniform(0, 1, size=n_times))
 
 
 def add_noise(values, var=2, type='gaussian'):
+    # Adds a noise of type type to the values with a variance of var.
+    # This function also operates the cut-of to 0 (we need only positive values for biological significance).
+
     if type == 'gaussian':
         noise = np.random.normal(0, var, size=values.shape)
         noisy_values = values + noise
         noisy_values[noisy_values < 0] = 0
+    else:
+        raise ValueError('This type of noise (%s) is not supported yet.' % type)
+
     return noisy_values
 
 
 def evaluate_functions(functions, times):
+    # Evaluates the functions at each timestamp.
+    # Returns a DataFrame containing the values of the functions.
+
     values = pd.DataFrame()
     for f in functions:
         v = f(times)
@@ -46,6 +61,9 @@ def evaluate_functions(functions, times):
 
 
 def drop_points(values, range=(0.2, 0.4)):
+    # Drops a random number of points (in the specified range)
+    # Returns both the values (after the drop) and the classes of each point (0: not dropped, 1: dropped).
+
     classes = pd.DataFrame()
     for ix, row in values.iterrows():
         n_dropped = np.random.randint(low=len(row) * range[0], high=len(row) * range[1])
@@ -58,6 +76,8 @@ def drop_points(values, range=(0.2, 0.4)):
 
 
 def plot_functions(functions, values, times):
+    # Plots the noisy values and the functions.
+
     plt.figure()
     for ix, row in values.iterrows():
         real_values = [max(functions[ix](t), 0) for t in times]
@@ -69,6 +89,8 @@ def plot_functions(functions, values, times):
 
 
 def get_dataset(n_genes, n_times, n_dropped, var=2, noise='gaussian', save=False):
+    # Generates the dataset. If save=True, saves the coefficients of the functions, the noisy values and the classes.
+
     functions, coefficients = get_functions(n=n_genes, d=degree)
     times = get_times(n_times)
     values = evaluate_functions(functions, times)
@@ -82,11 +104,11 @@ def get_dataset(n_genes, n_times, n_dropped, var=2, noise='gaussian', save=False
 
 
 if __name__ == '__main__':
-    # functions, coefficients = get_functions(n=n_genes,d=degree)
-    # times = get_times(n_times)
-    # values = evaluate_functions(functions,  times)
-    # values = add_noise(values, var, noise)
-    # values, classes = drop_points(values)
-    # plot_functions(functions, values, times)
+    functions, coefficients = get_functions(n=5, d=degree)
+    times = get_times(n_times)
+    values = evaluate_functions(functions, times)
+    values = add_noise(values, var, noise)
+    values, classes = drop_points(values)
+    plot_functions(functions, values, times)
 
-    get_dataset(n_genes, n_times, n_dropped=(0.2, 0.4), save=True)
+    # get_dataset(n_genes, n_times, n_dropped=(0.2, 0.4), save=True)
