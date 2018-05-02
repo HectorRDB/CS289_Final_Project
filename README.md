@@ -35,4 +35,4 @@ Task repartition:
 * The proposal for our project is available on Overleaf and may be _read and
   edited_ [here](https://www.overleaf.com/14957190bbtqsmpgdttw).
  * The report for our project is available on Overleaf and may be _read and
-  edited_ [here] (https://www.overleaf.com/15930185rsdjjdnpswpd)/
+  edited_ [here](https://www.overleaf.com/15930185rsdjjdnpswpd).
