@@ -21,7 +21,18 @@ Your local repositories should also contain a data folder that will be ignored w
 
 ---
 
+Task repartition:
+
+- Build a simulation dataset (Ariane)
+- Build test functions (Hector)
+- E-M algorithm: mathematics (Hector)
+- E-M algorithm (Ariane)
+- Clustering with closest time points as features (Alex)
+- Clustering with customized features (Dany25)
+
 ## Deliverables
 
 * The proposal for our project is available on Overleaf and may be _read and
   edited_ [here](https://www.overleaf.com/14957190bbtqsmpgdttw).
+ * The report for our project is available on Overleaf and may be _read and
+  edited_ [here](https://www.overleaf.com/15930185rsdjjdnpswpd).
