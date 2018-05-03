@@ -2,12 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-n_genes = 1000
-degree = 12
-n_times = 500
-var = 2
-noise = 'gaussian'
-
 
 def get_function(d=3):
     # Generates a function of degree d.
@@ -42,7 +36,9 @@ def add_noise(values, var=2, type='gaussian'):
     if type == 'gaussian':
         noise = np.random.normal(0, var, size=values.shape)
         noisy_values = values + noise
-        noisy_values[noisy_values < 0] = 0
+        # idx = noisy_values < 0
+        # noisy_values[idx] = 0
+
     else:
         raise ValueError('This type of noise (%s) is not supported yet.' % type)
 
@@ -66,9 +62,11 @@ def drop_points(values, range=(0.2, 0.4)):
 
     classes = pd.DataFrame()
     for ix, row in values.iterrows():
+        # For every function we decide on a random number of points to drop.
         n_dropped = np.random.randint(low=len(row) * range[0], high=len(row) * range[1])
+        # We set random indices to drop
         idx = np.random.randint(low=0, high=len(row), size=n_dropped)
-        values[idx] = 0
+        row[idx] = 0
         c = pd.Series(np.zeros(len(row)))
         c[idx] = 1
         classes = classes.append(pd.Series(c), ignore_index=True)
@@ -94,21 +92,31 @@ def get_dataset(n_genes, n_times, n_dropped, var=2, noise='gaussian', save=False
     functions, coefficients = get_functions(n=n_genes, d=degree)
     times = get_times(n_times)
     values = evaluate_functions(functions, times)
-    values = add_noise(values, var, noise)
-    values, classes = drop_points(values, n_dropped)
+    noisy_values = add_noise(values, var, noise)
+    noisy_values[noisy_values < 0] = 0
+    dropped_values, classes = drop_points(noisy_values, n_dropped)
     if save:
         coefficients.to_csv(('../cache/generative_functions.csv'))
-        values.to_csv('../cache/synthetic_data.csv')
+        noisy_values.to_csv('../cache/synthetic_data.csv')
         classes.to_csv(('../cache/dropped_points.csv'))
+    else:
+        plot_functions(functions, dropped_values, times)
     return values, classes
 
 
-if __name__ == '__main__':
-    functions, coefficients = get_functions(n=5, d=degree)
-    times = get_times(n_times)
-    values = evaluate_functions(functions, times)
-    values = add_noise(values, var, noise)
-    values, classes = drop_points(values)
-    plot_functions(functions, values, times)
+n_genes = 1000
+degree = 12
+n_times = 500
+var = 2
+noise = 'gaussian'
+np.random.seed(2)
 
-    # get_dataset(n_genes, n_times, n_dropped=(0.2, 0.4), save=True)
+if __name__ == '__main__':
+    # functions, coefficients = get_functions(n=5, d=degree)
+    # times = get_times(n_times)
+    # values = evaluate_functions(functions, times)
+    # values = add_noise(values, var, noise)
+    # values, classes = drop_points(values)
+    # plot_functions(functions, values, times)
+
+    get_dataset(n_genes, n_times, n_dropped=(0.2, 0.4), save=True)
