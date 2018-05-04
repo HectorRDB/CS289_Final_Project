@@ -140,4 +140,4 @@ if __name__ == '__main__':
     # values, classes = drop_points(values)
     # plot_functions(functions, values, times)
 
-    get_dataset(n_genes, n_times, p_dropped=(0.15, 0.3), save=False)
+    get_dataset(n_genes, n_times, p_dropped=(0.1, 0.2), save=False)
