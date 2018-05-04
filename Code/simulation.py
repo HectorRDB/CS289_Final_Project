@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
+from scipy.stats import norm
 
 
 def _get_function(d=3):
@@ -31,12 +33,26 @@ def _get_times(n_times=500):
 
 
 def _add_noise(values, var=2, type='gaussian'):
-    # Adds a noise of type type to the values with a variance of var.
+    # Adds a noise of type type to the values with a variance of mean/4.
     # This function also operates the cut-of to 0 (we need only positive values for biological significance).
 
+    noisy_values = pd.DataFrame()
+
     if type == 'gaussian':
-        noise = np.random.normal(0, var, size=values.shape)
-        noisy_values = values + noise
+        for ix, row in values.iterrows():
+
+            s = np.sqrt(np.var(row))
+            noise = []
+            m = np.mean(row[row > 0])
+            for i in range(len(row)):
+                # phi = lambda x: norm.pdf((-row[i] - x) / s)
+                # Phi = lambda x: norm.cdf((-row[i] - x) / s)
+                # fx = lambda x: x + s * (phi(x)) / (1 - Phi(x))
+                # m = fsolve(fx, 0)
+
+                noise.append(np.random.normal(0, m / 4))
+
+            noisy_values = noisy_values.append(pd.Series(row + noise))
 
     else:
         raise ValueError('This type of noise (%s) is not supported yet.' % type)
@@ -114,7 +130,7 @@ degree = 12
 n_times = 500
 var = 2
 noise = 'gaussian'
-np.random.seed(2)
+np.random.seed(3)
 
 if __name__ == '__main__':
     # functions, coefficients = get_functions(n=5, d=degree)
