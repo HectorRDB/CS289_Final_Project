@@ -84,6 +84,9 @@ def EM_M_step(data, q, times):
         # Update the probabilities p_j
         p[ix] = np.mean(q[ix])
 
+    # We know that our function cannot be negative.
+    fit_loess[fit_loess < 0] = 0
+
     return fit_loess, p
 
 
