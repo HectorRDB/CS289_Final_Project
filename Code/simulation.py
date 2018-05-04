@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 
 
@@ -36,8 +37,6 @@ def add_noise(values, var=2, type='gaussian'):
     if type == 'gaussian':
         noise = np.random.normal(0, var, size=values.shape)
         noisy_values = values + noise
-        # idx = noisy_values < 0
-        # noisy_values[idx] = 0
 
     else:
         raise ValueError('This type of noise (%s) is not supported yet.' % type)
@@ -57,36 +56,41 @@ def evaluate_functions(functions, times):
 
 
 def drop_points(values, range=(0.2, 0.4)):
-    # Drops a random number of points (in the specified range)
+    # Drops a random number of points that are not already 0 (in the specified range)
     # Returns both the values (after the drop) and the classes of each point (0: not dropped, 1: dropped).
 
-    classes = pd.DataFrame()
+    classes = pd.DataFrame(dtype=int)
     for ix, row in values.iterrows():
         # For every function we decide on a random number of points to drop.
-        n_dropped = np.random.randint(low=len(row) * range[0], high=len(row) * range[1])
-        # We set random indices to drop
-        idx = np.random.randint(low=0, high=len(row), size=n_dropped)
-        row[idx] = 0
-        c = pd.Series(np.zeros(len(row)))
-        c[idx] = 1
-        classes = classes.append(pd.Series(c), ignore_index=True)
+        p_dropped = np.random.uniform(low=range[0], high=range[1])
+
+        # Every non-zero point has a probability p_dropped to be dropped (binomial for n=1 is a bernoulli distribution):
+        idx_dropped = np.random.binomial(n=1, p=p_dropped, size=len(row))
+        # We don't drop points already at 0 (impossible to detect)..
+        idx_dropped[row == 0] = 1
+        # We actually set to 0 all the points.
+        row[idx_dropped == 0] = 0
+
+        classes = classes.append(pd.Series(idx_dropped, dtype=int), ignore_index=True)
+
     return values, classes
 
 
-def plot_functions(functions, values, times):
+def plot_functions(functions, values, times, classes):
     # Plots the noisy values and the functions.
 
-    plt.figure()
     for ix, row in values.iterrows():
+        plt.figure()
         real_values = [max(functions[ix](t), 0) for t in times]
         plt.plot(times, real_values, linewidth=2.0)
-        plt.scatter(times, row, marker='.')
-    plt.xlabel('Time')
-    plt.ylabel('Expression')
-    plt.show()
+        plt.scatter(times, row, marker='.', c=classes.loc[ix, :],
+                    cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+        plt.xlabel('Time')
+        plt.ylabel('Expression')
+        plt.show()
 
 
-def get_dataset(n_genes, n_times, n_dropped, var=2, noise='gaussian', save=False):
+def get_dataset(n_genes, n_times, p_dropped, var=2, noise='gaussian', save=False):
     # Generates the dataset. If save=True, saves the coefficients of the functions, the noisy values and the classes.
 
     functions, coefficients = get_functions(n=n_genes, d=degree)
@@ -94,13 +98,14 @@ def get_dataset(n_genes, n_times, n_dropped, var=2, noise='gaussian', save=False
     values = evaluate_functions(functions, times)
     noisy_values = add_noise(values, var, noise)
     noisy_values[noisy_values < 0] = 0
-    dropped_values, classes = drop_points(noisy_values, n_dropped)
+    dropped_values, classes = drop_points(noisy_values, p_dropped)
     if save:
+        pd.DataFrame(times).transpose().to_csv('../cache/times.csv')
         coefficients.to_csv(('../cache/generative_functions.csv'))
         noisy_values.to_csv('../cache/synthetic_data.csv')
         classes.to_csv(('../cache/dropped_points.csv'))
     else:
-        plot_functions(functions, dropped_values, times)
+        plot_functions(functions, dropped_values, times, classes)
     return values, classes
 
 
@@ -119,4 +124,4 @@ if __name__ == '__main__':
     # values, classes = drop_points(values)
     # plot_functions(functions, values, times)
 
-    get_dataset(n_genes, n_times, n_dropped=(0.2, 0.4), save=True)
+    get_dataset(n_genes, n_times, p_dropped=(0.15, 0.3), save=True)
