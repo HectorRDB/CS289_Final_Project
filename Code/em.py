@@ -200,12 +200,13 @@ def show_loess(data, loess, real_functions, labels):
                 plt.xlabel('Time')
                 plt.ylabel('Expression')
                 plt.title('Evolution of the loess fit for the function %s' % ix)
-                plt.savefig('../figure/loess_fit_%s.png' % ix)
 
         f = lambda x: np.polyval(real_functions.loc[ix, :], x)
         real_values = [max(f(t), 0) for t in times]
         plt.plot(times, real_values, c='r', linewidth=4, label='generative function')
         plt.legend()
+        plt.savefig('../figure/loess_fit_%s.png' % ix)
+
     plt.show()
 
 
@@ -213,10 +214,12 @@ if __name__ == '__main__':
 
     print('Loading data...')
 
-    data = pd.read_csv('../cache/synthetic_data.csv', index_col=0)
-    times = np.array(pd.read_csv('../cache/times.csv', index_col=0))
-    real_labels = pd.read_csv('../cache/dropped_points.csv', index_col=0)
-    real_function = pd.read_csv('../cache/generative_functions.csv', index_col=0)
+    n_genes = 5
+
+    data = pd.read_csv('../cache/synthetic_data.csv', index_col=0, nrows=n_genes)
+    times = np.array(pd.read_csv('../cache/times.csv', index_col=0, nrows=n_genes))
+    real_labels = pd.read_csv('../cache/dropped_points.csv', index_col=0, nrows=n_genes)
+    real_functions = pd.read_csv('../cache/generative_functions.csv', index_col=0, nrows=n_genes)
     times = times.reshape((500,))
 
     print('Starting EM...')
@@ -230,4 +233,5 @@ if __name__ == '__main__':
 
     # evaluate_classification(labels, real_labels)
     # show_data(data, functions, times, labels)
-    # show_loess(data, functions, real_functions, real_labels)
+
+    show_loess(data, functions, real_functions, real_labels)
