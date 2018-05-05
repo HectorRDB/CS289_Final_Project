@@ -3,11 +3,11 @@ import math
 import numpy as np
 import pandas as pd
 from skmisc.loess import loess
-import matplotlib
+import matplotlib.colors
 import matplotlib.pyplot as plt
 from scipy.stats import norm
 
-import simulation
+import Test_Clustering as test
 
 def normal_pdf(x):
     # Normal probability density function
@@ -20,7 +20,6 @@ def EM_initial_guess(data, times, nulls):
     n_genes, n_times = data.shape
 
     sigmas = np.sqrt(np.var(data, axis=1))
-    is_zeros = sigmas == 0
     fit_loess = np.zeros(data.shape)
     # For every gene
     for ix, row in data.iterrows():
@@ -32,8 +31,9 @@ def EM_initial_guess(data, times, nulls):
     # Set the probabilities p_j uniformly.
     n_0 = np.sum(np.sum(nulls))
     prob = n_0 / (2 * n_times * n_genes)
+
     # p is 0.5 * probability to be 0
-    p = [0.9 for _ in range(n_genes)]
+    p = [prob for _ in range(n_genes)]
 
     return sigmas, fit_loess, p
 
@@ -99,14 +99,6 @@ def EM_M_step(data, q, times):
     return fit_loess, p
 
 
-
-def EM_log_likelihood_calc(num_clusters, num_samples, data, mu, sigma, alpha):
-    L = np.zeros((num_samples, num_clusters))
-    for k in range(num_clusters):
-        L[:, k] = alpha[k] * gaussian_pdf(data, mu[k], sigma[k])
-    return np.sum(np.log(np.sum(L, axis=1)))
-
-
 def EM(data, times, thresh=0.001, max_iter=100):
     update = 100000
     nulls = data == 0
@@ -155,34 +147,13 @@ def show_data(data, loess, times, labels):
     plt.show()
 
 
-def evaluate_classification(labels, real_labels):
-    success = labels == real_labels
-    n, p = success.shape
-    acc = np.sum(np.sum(success)) / (n * p)
+def evaluate_classification(data, labels, real_labels):
+    em_labels, real_labels = test.preprocess_em(data, labels, real_labels)
+    tpr, tnr, acc, rand_acc = test.test(np.array([em_labels]), real_labels)
+
 
     print('Accuracy: %s' % acc)
-
-    p_real = np.sum(np.sum(real_labels)) / (n * p)
-
-    rand_acc = p_real ** 2 + (1 - p_real) ** 2
-
     print('Random accuracy: %s' % rand_acc)
-
-    pos = real_labels == 1
-    neg = real_labels == 0
-
-    n_pos = np.sum(np.sum(pos))
-    n_neg = np.sum(np.sum(neg))
-
-    tp = success & pos
-    tn = success & neg
-
-    n_tp = np.sum(np.sum(tp))
-    n_tn = np.sum(np.sum(tn))
-
-    tpr = n_tp / n_pos
-    tnr = n_tn / n_neg
-
     print('True Positive Rate: %s' % tpr)
     print('True Negative Rate: %s' % tnr)
 
@@ -210,12 +181,8 @@ def show_loess(data, loess, real_functions, labels):
     plt.show()
 
 
-if __name__ == '__main__':
-
+def main(n_genes=None, evaluate=False, show=False, save=False):
     print('Loading data...')
-
-    n_genes = 5
-
     data = pd.read_csv('../cache/synthetic_data.csv', index_col=0, nrows=n_genes)
     times = np.array(pd.read_csv('../cache/times.csv', index_col=0, nrows=n_genes))
     real_labels = pd.read_csv('../cache/dropped_points.csv', index_col=0, nrows=n_genes)
@@ -226,12 +193,20 @@ if __name__ == '__main__':
     q, functions = EM(data, times, thresh=0.1 * len(data), max_iter=100)
 
     labels = np.zeros(q.shape)
-    labels[q > 0.05] = 1
+    labels[q > 0.5] = 1
 
-    pd.DataFrame(q).to_csv('../cache/q.csv')
-    pd.DataFrame(labels).to_csv('../ariane_labels.csv')
+    if save:
+        pd.DataFrame(q).to_csv('../cache/q.csv')
+        pd.DataFrame(labels).to_csv('../cache/em_labels.csv')
+        pd.DataFrame(functions).to_csv(('../cache/loess_predictions.csv'))
 
-    # evaluate_classification(labels, real_labels)
-    # show_data(data, functions, times, labels)
+    if evaluate:
+        evaluate_classification(labels, real_labels)
 
-    show_loess(data, functions, real_functions, real_labels)
+    if show:
+        show_data(data, functions, times, labels)
+        show_loess(data, functions, real_functions, real_labels)
+
+
+if __name__ == '__main__':
+    main()

@@ -11,7 +11,7 @@ def test(predictions, true_labels):
     # the average accuracy
 
     n = len(predictions)
-    Quality_Prediction = np.zeros((3, n))
+    Quality_Prediction = np.zeros((4, n))
 
     for i in np.arange(n):
         success = predictions[i] == true_labels
@@ -24,10 +24,11 @@ def test(predictions, true_labels):
         fp = np.sum(error & pos)
         fn = np.sum(error & neg)
 
-        # 0: TPR, 1:TNR, 2:Accuracy
+        # 0: TPR, 1:TNR, 2:Accuracy, 3: Random Accuracy
         Quality_Prediction[0][i] = tp / (tp + fn)
         Quality_Prediction[1][i] = tn / (fp + tn)
         Quality_Prediction[2][i] = np.sum(success) / len(true_labels)
+        Quality_Prediction[2][i] = neg ** 2 + (1 - neg) ** 2
 
     return Quality_Prediction
 
@@ -70,15 +71,14 @@ def roc(q, true_labels, data):
 if __name__ == '__main__':
     q = pd.read_csv('../cache/q.csv', index_col=0)
     print(q.shape)
-    # em_labels = pd.read_csv('../cache/ariane_labels.csv', index_col=0)
+    em_labels = pd.read_csv('../cache/em_labels.csv', index_col=0)
     true_labels = pd.read_csv('../cache/dropped_points.csv', index_col=0)
     data = pd.read_csv('../cache/synthetic_data.csv', index_col=0)
 
     # roc(q, true_labels, data)
 
-    em_labels = np.zeros(q.shape)
-    em_labels[q > 0.5] = 1
-
+    # em_labels = np.zeros(q.shape)
+    # em_labels[q > 0.5] = 1
     em_labels, true_labels = preprocess_em(data, em_labels, true_labels)
     qp = test(np.array([em_labels]), true_labels)
     print(qp)
