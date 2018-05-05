@@ -11,7 +11,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, MeanShift
+import Test_Clustering
 
 # Reading data
 df = pd.read_csv('../cache/synthetic_data.csv', index_col=0)
@@ -93,7 +94,7 @@ def create_feature_matrix_all_gene(points,window_size=10,fill_missing="symmetry"
 total_size,features,all_labels = create_feature_matrix_all_gene(points)
 
 
-print("Visualization after a 2-PCA: ")
+print("Visualization with the true labels after a 2-PCA: ")
 num_genes = features.shape[0]
 pca = PCA(n_components=2)
 pca.fit(features[:num_genes])
@@ -102,13 +103,15 @@ print(pca.explained_variance_ratio_)
 print(pca.singular_values_) 
 
 features_red = pca.transform(features[:num_genes])
-plt.figure(figsize=(20,10))
+plt.figure(figsize=(15,10))
 plt.scatter(features_red[:,0],features_red[:,1],marker='.', c=all_labels[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.legend()
 plt.show()
 
 
 plt.figure(figsize=(30,20))
 plt.scatter(features_red[:,0],features_red[:,1],marker='.', c=all_labels[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.legend()
 plt.savefig("../figure/cluster_2_pca.png")
 plt.close()
 
@@ -125,7 +128,9 @@ features_eng = np.concatenate([features_eng,max_expression],axis=1)
 features_eng = np.concatenate([features_eng,num_zero_expression],axis=1)
 
 
-print("Visualization after a 2-PCA and Feature Engineering: ")
+
+# PCA on Features Engineered
+print("Visualization with the true labels after a 2-PCA and Feature Engineering: ")
 num_genes = features_eng.shape[0]
 pca = PCA(n_components=2)
 pca.fit(features_eng[:num_genes])
@@ -144,7 +149,9 @@ plt.savefig("../figure/cluster_2_pca_with_fe.png")
 plt.close()
 
 
-# Clustering
+
+
+# Clustering - Kmeans
 kmeans = KMeans(n_clusters=2, random_state=0).fit(features_eng_red)
 kmeans.labels_
 kmeans.cluster_centers_
@@ -153,22 +160,29 @@ labels_predict = 1-kmeans.labels_
 
 
 features_eng_red = pca.transform(features_eng[:num_genes])
+print("Visualization with the predicted labels after a 2-PCA and Feature Engineering: ")
 plt.figure(figsize=(20,10))
 plt.scatter(features_eng_red[:,0],features_eng_red[:,1],marker='.', c=labels_predict[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
 plt.show()
 
+plt.figure(figsize=(30,20))
+plt.scatter(features_eng_red[:,0],features_eng_red[:,1],marker='.', c=labels_predict[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.savefig("../figure/k_means_2_pca_with_fe.png")
+plt.close()
+
+
+
+# Accuracy
 labels_predict.shape
-all_labels[all_labels==labels_predict].shape[0]/all_labels.shape[0]
+print("Accuracy: ",all_labels[all_labels==labels_predict].shape[0]/all_labels.shape[0])
 
-#Sandbox
+TPR = all_labels[(all_labels==1.) & (all_labels ==labels_predict)].shape[0]/(all_labels[(all_labels==1.) & (all_labels ==labels_predict)].shape[0]+all_labels[(all_labels==1.) & (labels_predict ==0.)].shape[0])
+print("TPR: ",TPR)
+TNR = all_labels[(all_labels==0.) & (all_labels ==labels_predict)].shape[0]/(all_labels[(all_labels==0.) & (all_labels ==labels_predict)].shape[0]+all_labels[(all_labels==0.) & (labels_predict==1)].shape[0])
+print("TNR: ",TNR)
+acc= (all_labels[(all_labels==1.) & (all_labels ==labels_predict)].shape[0]+all_labels[(all_labels==0.) & (all_labels ==labels_predict)].shape[0])/(all_labels[(all_labels==1.) & (all_labels ==labels_predict)].shape[0]+all_labels[(all_labels==1.) & (labels_predict ==0.)].shape[0]+all_labels[(all_labels==0.) & (all_labels ==labels_predict)].shape[0]+all_labels[(all_labels==0.) & (labels_predict==1)].shape[0])
+print("Accuracy : ",acc)
 
-"""
-np.argwhere(np.isnan(features))
 
-for i in range(366,500):
-    #gene =146
-    s_test, features_test, labels_test = create_feature_matrix_per_gene(points,i,10,"symmetry")
-    if( np.argwhere(np.isnan(features_test)).shape[0]>0):
-        print(i)
-        break
-"""
+
+
