@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib
 import matplotlib.pyplot as plt
-from scipy.optimize import fsolve
 from scipy.stats import norm
 
 
@@ -81,7 +80,7 @@ def _drop_points(values, range=(0.2, 0.4)):
         p_dropped = np.random.uniform(low=range[0], high=range[1])
 
         # Every non-zero point has a probability p_dropped to be dropped (binomial for n=1 is a bernoulli distribution):
-        idx_dropped = np.random.binomial(n=1, p=p_dropped, size=len(row))
+        idx_dropped = np.random.binomial(n=1, p=1 - p_dropped, size=len(row))
         # We don't drop points already at 0 (impossible to detect)..
         idx_dropped[row == 0] = 1
         # We actually set to 0 all the points.
@@ -103,7 +102,8 @@ def plot_functions(functions, values, times, classes):
                     cmap=matplotlib.colors.ListedColormap(['red', 'green']))
         plt.xlabel('Time')
         plt.ylabel('Expression')
-        plt.show()
+        plt.title('Simulated function %s' % ix)
+    plt.show()
 
 
 def get_dataset(n_genes, n_times, p_dropped, var=2, noise='gaussian', save=False):
@@ -115,6 +115,17 @@ def get_dataset(n_genes, n_times, p_dropped, var=2, noise='gaussian', save=False
     noisy_values = _add_noise(values, var, noise)
     noisy_values[noisy_values < 0] = 0
     dropped_values, classes = _drop_points(noisy_values, p_dropped)
+
+    # # We drop all the rows which are full of 0.
+    # var = np.var(dropped_values, axis=1)
+    # dropped_values = dropped_values.drop(var == 0)
+    # dropped_values.index = range(len(dropped_values))
+    #
+    # # We also dropped the associated functions and classes
+    # classes = classes.drop(var == 0)
+    # classes.index = range(len(classes))
+    # functions = np.array(functions)[var > 0]
+
     if save:
         pd.DataFrame(times).transpose().to_csv('../cache/times.csv')
         coefficients.to_csv(('../cache/generative_functions.csv'))
@@ -122,10 +133,10 @@ def get_dataset(n_genes, n_times, p_dropped, var=2, noise='gaussian', save=False
         classes.to_csv(('../cache/dropped_points.csv'))
     else:
         plot_functions(functions, dropped_values, times, classes)
-    return values, times, classes
+    return dropped_values, times, classes
 
 
-n_genes = 5
+n_genes = 1000
 degree = 12
 n_times = 500
 var = 2
@@ -140,4 +151,4 @@ if __name__ == '__main__':
     # values, classes = drop_points(values)
     # plot_functions(functions, values, times)
 
-    get_dataset(n_genes, n_times, p_dropped=(0.1, 0.2), save=False)
+    get_dataset(n_genes, n_times, p_dropped=(0.1, 0.2), save=True)
