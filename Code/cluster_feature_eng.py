@@ -11,6 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 
 # Reading data
 df = pd.read_csv('../cache/synthetic_data.csv', index_col=0)
@@ -20,7 +21,7 @@ dropped_points = df_dropped_points.values
 
 
 
-def create_feature_matrix_per_row(points, row, window_size,fill_missing):
+def create_feature_matrix_per_gene(points, row, window_size,fill_missing):
     """
     fill_missing = "symmetry" or "NaN" to chose the option to complet the missing value.
     """
@@ -50,11 +51,11 @@ def create_feature_matrix_per_row(points, row, window_size,fill_missing):
                 else: 
                     feature_matrix[res_index,k+window_size] = points[row,j+k]
                     
-    return res_index,feature_matrix[:res_index,:], np.array(labels)
+    return res_index,feature_matrix[:res_index,:], labels
 
-
-gene =2
-s_test, features_test, labels_test = create_feature_matrix_per_row(points,gene,10,"symmetry")
+"""
+gene =7
+s_test, features_test, labels_test = create_feature_matrix_per_gene(points,gene,10,"symmetry")
 
 
 # PCA
@@ -66,21 +67,108 @@ pca.fit(features_test)
 features_test_red = pca.transform(features_test)
 plt.scatter(features_test_red[:,0],features_test_red[:,1],marker='.', c=labels_test, cmap=matplotlib.colors.ListedColormap(['red', 'green']))
 
-
-
-
-
 """
-def create_feature_matrix(points,window_size=10,fill_missing="symmetry"):
+
+#unwanted genes (because unexpected NaN values)
+unwanted=[365,965]
+
+
+def create_feature_matrix_all_gene(points,window_size=10,fill_missing="symmetry"):
     n,m = points.shape
     features_matrix = np.zeros((n*m,window_size*2+1))
+    all_labels = []
+    total_size = 0
     for i in range(n):
-        features_matrix[i*m:i*m+m,:] = create_feature_matrix_per_row(points, i, window_size,fill_missing)
-    
-    return features_matrix
+        if i not in unwanted:
+            s, features, labels = create_feature_matrix_per_gene(points,i,10,"symmetry")
+            all_labels += labels
+            
+            features_matrix[total_size:total_size+s,:] = features
+            
+            total_size += s
+    return total_size,features_matrix[:total_size],np.array(all_labels)
         
     
 
-features = create_feature_matrix(points)
-"""
+total_size,features,all_labels = create_feature_matrix_all_gene(points)
 
+
+print("Visualization after a 2-PCA: ")
+num_genes = features.shape[0]
+pca = PCA(n_components=2)
+pca.fit(features[:num_genes])
+
+print(pca.explained_variance_ratio_)  
+print(pca.singular_values_) 
+
+features_red = pca.transform(features[:num_genes])
+plt.figure(figsize=(20,10))
+plt.scatter(features_red[:,0],features_red[:,1],marker='.', c=all_labels[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.show()
+
+
+plt.figure(figsize=(30,20))
+plt.scatter(features_red[:,0],features_red[:,1],marker='.', c=all_labels[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.savefig("../figure/cluster_2_pca.png")
+plt.close()
+
+
+
+# Feature Engineering
+
+min_expression =np.array([np.min(features[i,:]) for i in range(features.shape[0])]) #useless allways 0
+max_expression =np.array([np.max(features[i,:]) for i in range(features.shape[0])]).reshape(-1,1)
+num_zero_expression =np.array([(features[i,:]==0).shape[0] for i in range(features.shape[0])]).reshape(-1,1)
+
+features_eng = np.copy(features)
+features_eng = np.concatenate([features_eng,max_expression],axis=1)
+features_eng = np.concatenate([features_eng,num_zero_expression],axis=1)
+
+
+print("Visualization after a 2-PCA and Feature Engineering: ")
+num_genes = features_eng.shape[0]
+pca = PCA(n_components=2)
+pca.fit(features_eng[:num_genes])
+
+print(pca.explained_variance_ratio_)  
+print(pca.singular_values_) 
+
+features_eng_red = pca.transform(features_eng[:num_genes])
+plt.figure(figsize=(20,10))
+plt.scatter(features_eng_red[:,0],features_eng_red[:,1],marker='.', c=all_labels[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.show()
+
+plt.figure(figsize=(30,20))
+plt.scatter(features_eng_red[:,0],features_eng_red[:,1],marker='.', c=all_labels[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.savefig("../figure/cluster_2_pca_with_fe.png")
+plt.close()
+
+
+# Clustering
+kmeans = KMeans(n_clusters=2, random_state=0).fit(features_eng_red)
+kmeans.labels_
+kmeans.cluster_centers_
+
+labels_predict = 1-kmeans.labels_
+
+
+features_eng_red = pca.transform(features_eng[:num_genes])
+plt.figure(figsize=(20,10))
+plt.scatter(features_eng_red[:,0],features_eng_red[:,1],marker='.', c=labels_predict[:num_genes], cmap=matplotlib.colors.ListedColormap(['red', 'green']))
+plt.show()
+
+labels_predict.shape
+all_labels[all_labels==labels_predict].shape[0]/all_labels.shape[0]
+
+#Sandbox
+
+"""
+np.argwhere(np.isnan(features))
+
+for i in range(366,500):
+    #gene =146
+    s_test, features_test, labels_test = create_feature_matrix_per_gene(points,i,10,"symmetry")
+    if( np.argwhere(np.isnan(features_test)).shape[0]>0):
+        print(i)
+        break
+"""
