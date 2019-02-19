@@ -1,4 +1,4 @@
-# CS289 Final Project
+# [CS289](https://people.eecs.berkeley.edu/~jrs/189/) Spring 2018 Final Project
 
 > These are materials for the final project for CS289
 
